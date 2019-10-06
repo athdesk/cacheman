@@ -49,7 +49,7 @@ func HandleReq(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeRemoteFile(w http.ResponseWriter, reqPath string) {
-	fmt.Println("Serving remotely:")
+	fmt.Println("Serving remotely")
 	BuildDirTreeForFile(reqPath)
 	currentMirrorIndex := 0
 	halting := false
@@ -63,41 +63,47 @@ func ServeRemoteFile(w http.ResponseWriter, reqPath string) {
 
 	out, _ := os.Create(reqPath)
 
-	for {
+	for { //execute cycle for each mirror, will break if download is successful
 		currentMirror = *MirrorList[currentMirrorIndex]
 		packageURL = currentMirror
 		packageURL.Path = path.Join(packageURL.Path, remotePath)
 		getResp, getErr := httpClient.Get(packageURL.String())
+		mirrorBad := false
 
-		fmt.Println(packageURL.String())
-
-		if getErr != nil || getResp.StatusCode == 404 {
-			currentMirrorIndex++
-			fmt.Println(getErr, " ", getResp.StatusCode)
-			if currentMirrorIndex >= len(MirrorList) {
-				currentMirrorIndex = 0
-				nonExistent = true
-				break
-			}
-		} else {
+		if getErr != nil || getResp.StatusCode == 404 { //is there a problem with the mirror?
+			mirrorBad = true
+		} else { //mirror ok, start downloading
 			fileSize := getResp.Header.Get("Content-Length")
 			w.Header().Add("Content-Length", fileSize)
 			w.WriteHeader(200)
-			for {
-				splitWr := io.MultiWriter(out, w)
-				_, copyErr := io.CopyN(splitWr, getResp.Body, int64(ChunkSize))
-				if copyErr != nil && copyErr != io.EOF {
+			splitWr := io.MultiWriter(out, w)
+
+			for { //cycle reads Get>Body, ChunkSize bytes at a time
+				_, copyErr := io.CopyN(splitWr, getResp.Body, int64(ChunkSize)) //read body
+
+				if copyErr != nil && copyErr != io.EOF { //stream errored, not because file is over: delete file and move on
 					halting = true
 					fmt.Println(copyErr)
 					break
-				} else if copyErr == io.EOF {
+				} else if copyErr == io.EOF { // stream errored because file is over: close gracefully
 					getResp.Body.Close()
 					break
 				}
+
+			}
+
+		}
+
+		if mirrorBad { //moves to the next mirror, if possible
+			currentMirrorIndex++
+			if currentMirrorIndex >= len(MirrorList) {
+				currentMirrorIndex = 0
+				nonExistent = true
+				halting = true
+				break
 			}
 		}
 
-		break
 	}
 
 	out.Close()
@@ -107,7 +113,7 @@ func ServeRemoteFile(w http.ResponseWriter, reqPath string) {
 	if nonExistent {
 		w.WriteHeader(404)
 	}
-	fmt.Println("File remotely served!")
+
 }
 
 func BuildDirTreeForFile(path string) {
@@ -118,7 +124,6 @@ func BuildDirTreeForFile(path string) {
 }
 
 func ServeCachedFile(w http.ResponseWriter, path string) {
-	fmt.Printf("Serving local file: %s\n", path)
 
 	file, _ := os.Open(path)
 	defer file.Close()
