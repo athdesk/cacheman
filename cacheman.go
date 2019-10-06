@@ -28,7 +28,9 @@ func HandleReq(w http.ResponseWriter, r *http.Request) {
 	RemoteRequired := true
 
 	if local.FileExists(RequestedLocalPath) { //is file cached?
-		RemoteRequired = !local.ServeFile(w, RequestedLocalPath, &Cfg)
+		if !local.IsFileExcluded(RequestedLocalPath, &Cfg) {
+			RemoteRequired = !local.ServeFile(w, RequestedLocalPath, &Cfg)
+		}
 	}
 
 	if RemoteRequired {

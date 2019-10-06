@@ -54,7 +54,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 			StreamingError := CopyStream(SplitWr, GetResp.Body, Cfg)
 			Halting = StreamingError != nil //if there's an error, delete the file
 			GetResp.Body.Close()
-
+			break
 		}
 
 	}

@@ -11,6 +11,9 @@ func GetConfig(Cfg *Config) {
 	Cfg.HostAddr = ":8080"
 	Cfg.ChunkSize = 1024
 	Cfg.MirrorSuffix = "$repo/os/$arch"
+	Cfg.ExcludedExts = make([]string, 2)
+	Cfg.ExcludedExts[0] = "db"
+	Cfg.ExcludedExts[1] = "sig"
 }
 
 func GetMirrorList(Cfg *Config) {

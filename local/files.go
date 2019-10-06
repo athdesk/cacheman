@@ -1,8 +1,10 @@
 package local
 
 import (
+	. "cacheman/shared"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func FileExists(filename string) bool {
@@ -35,4 +37,14 @@ func BuildDirTreeForFile(path string) {
 	if !DirExists(realPath) {
 		os.MkdirAll(realPath, 0755)
 	}
+}
+
+func IsFileExcluded(path string, Cfg *Config) bool {
+	SplitPath := strings.Split(path, ".")
+	for _, Excl := range Cfg.ExcludedExts {
+		if SplitPath[len(SplitPath)-1] == Excl {
+			return true
+		}
+	}
+	return false
 }

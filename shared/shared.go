@@ -8,4 +8,5 @@ type Config struct {
 	ChunkSize    int
 	MirrorList   []*url.URL
 	MirrorSuffix string
+	ExcludedExts []string
 }
