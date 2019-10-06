@@ -5,6 +5,7 @@ import (
 	"cacheman/remote"
 	. "cacheman/shared"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -15,7 +16,7 @@ func main() {
 	local.GetMirrorList(&Cfg)
 	//TODO: handle errors
 	http.HandleFunc("/", HandleReq)
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func HandleReq(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +35,7 @@ func HandleReq(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if RemoteRequired {
-		local.BuildDirTreeForFile(RequestedLocalPath)
+		_ = local.BuildDirTreeForFile(RequestedLocalPath)
 		remote.ServeFile(w, RequestedPath, &Cfg)
 	}
 

@@ -29,14 +29,14 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 		CurrentMirror = *Cfg.MirrorList[CurrentMirrorIndex]
 		PackageURL = CurrentMirror
 		PackageURL.Path = path.Join(PackageURL.Path, ReqPath)
-		GetResp, getErr := httpClient.Get(PackageURL.String())
+		GetResp, GetErr := httpClient.Get(PackageURL.String())
 		MirrorBad := false
 
-		if getErr != nil || GetResp.StatusCode == 404 {
+		if GetErr != nil || GetResp.StatusCode == 404 {
 			MirrorBad = true
 		} //is there a problem with the mirror?
 
-		if MirrorBad { //moves to the next mirror, if possible
+		if MirrorBad || GetErr != nil { //moves to the next mirror, if possible
 			CurrentMirrorIndex++
 			if CurrentMirrorIndex >= len(Cfg.MirrorList) {
 				CurrentMirrorIndex = 0
@@ -53,7 +53,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 			SplitWr := io.MultiWriter(OutFile, w)
 			StreamingError := CopyStream(SplitWr, GetResp.Body, Cfg)
 			Halting = StreamingError != nil //if there's an error, delete the file
-			GetResp.Body.Close()
+			_ = GetResp.Body.Close()
 			break
 		}
 
@@ -61,7 +61,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 
 	OutFile.Close()
 	if Halting {
-		os.Remove(LocalPath)
+		_ = os.Remove(LocalPath)
 	}
 	if NonExistent {
 		w.WriteHeader(404)

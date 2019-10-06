@@ -32,11 +32,12 @@ func FileSize(filename string) int64 {
 	}
 }
 
-func BuildDirTreeForFile(path string) {
+func BuildDirTreeForFile(path string) error {
 	realPath := filepath.Dir(path)
 	if !DirExists(realPath) {
-		os.MkdirAll(realPath, 0755)
+		return os.MkdirAll(realPath, 0755)
 	}
+	return nil
 }
 
 func IsFileExcluded(path string, Cfg *Config) bool {

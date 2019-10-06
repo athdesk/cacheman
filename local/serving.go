@@ -31,7 +31,7 @@ func ServeFile(w http.ResponseWriter, path string, Cfg *Config) bool {
 		if bytesRead == 0 {
 			break
 		}
-		w.Write(buffer)
+		_, _ = w.Write(buffer)
 		totalBytesServed += float64(bytesRead)
 	}
 
