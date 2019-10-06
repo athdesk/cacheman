@@ -19,13 +19,19 @@ func main() {
 
 func HandleReq(w http.ResponseWriter, r *http.Request) {
 	//TODO: Sanitize request input
-	//TODO: Handle case where 2 computers are downloading the same file
-	RequestedPath := Config.CacheDir + "/" + r.URL.Path[1:] //Check if file exists in cache directory, not /
+	//TODO: Handle case where 2+ computers are downloading the same file
+	RequestedLocalPath := Config.CacheDir + "/" + r.URL.Path[1:] //add cachedir to path, to not check in /
+	RequestedPath := r.URL.Path[1:]
 	fmt.Printf("File requested: %s\n", RequestedPath)
 
-	if local.FileExists(RequestedPath) { //is file cached?
-		local.ServeFile(w, RequestedPath, &Config)
-	} else {
+	RemoteRequired := true
+
+	if local.FileExists(RequestedLocalPath) { //is file cached?
+		RemoteRequired = !local.ServeFile(w, RequestedLocalPath, &Config)
+	}
+
+	if RemoteRequired {
 		remote.ServeFile(w, RequestedPath, &Config)
 	}
+
 }

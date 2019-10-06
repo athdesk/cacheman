@@ -2,15 +2,20 @@ package local
 
 import (
 	"bufio"
+	"cacheman/remote"
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
-func ServeFile(w http.ResponseWriter, path string, Cfg *Config) {
-
-	//TODO: check if local filesize is equal to remote filesize header
+func ServeFile(w http.ResponseWriter, path string, Cfg *Config) bool {
+	AbsPath := strings.ReplaceAll(path, Cfg.CacheDir, "")
+	ExpectedSize := remote.GetCorrectSize(AbsPath, Cfg)
+	if ExpectedSize != -1 && FileSize(path) != ExpectedSize {
+		return false
+	}
 
 	file, _ := os.Open(path)
 	defer file.Close()
@@ -35,5 +40,5 @@ func ServeFile(w http.ResponseWriter, path string, Cfg *Config) {
 	avgSpeed = avgSpeed * 1000000                     // kB/s
 
 	fmt.Printf("Served file %s. Average speed: %f kB/s \n", path, avgSpeed)
-
+	return true
 }
