@@ -2,9 +2,11 @@ package local
 
 import (
 	"bufio"
+	"bytes"
 	"cacheman/remote"
 	. "cacheman/shared"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -14,7 +16,8 @@ import (
 func ServeFile(w http.ResponseWriter, path string, Cfg *Config) bool {
 	AbsPath := strings.ReplaceAll(path, Cfg.CacheDir, "")
 	ExpectedSize := remote.GetCorrectSize(AbsPath, Cfg)
-	if ExpectedSize != -1 && FileSize(path) != ExpectedSize {
+	RealSize := FileSize(path)
+	if ExpectedSize != -1 && RealSize != ExpectedSize {
 		return false
 	}
 
@@ -31,7 +34,8 @@ func ServeFile(w http.ResponseWriter, path string, Cfg *Config) bool {
 		if bytesRead == 0 {
 			break
 		}
-		_, _ = w.Write(buffer)
+		BufferReader := bytes.NewReader(buffer)
+		_, _ = io.CopyN(w, BufferReader, int64(bytesRead))
 		totalBytesServed += float64(bytesRead)
 	}
 
