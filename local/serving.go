@@ -3,6 +3,7 @@ package local
 import (
 	"bufio"
 	"cacheman/remote"
+	. "cacheman/shared"
 	"fmt"
 	"net/http"
 	"os"

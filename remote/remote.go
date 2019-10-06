@@ -1,7 +1,7 @@
 package remote
 
 import (
-	"cacheman/local"
+	. "cacheman/shared"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,9 +11,8 @@ import (
 	"strconv"
 )
 
-func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
+func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 	fmt.Println("Serving remotely")
-	local.BuildDirTreeForFile(ReqPath)
 
 	Halting := false
 	NonExistent := false
@@ -70,7 +69,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
 
 }
 
-func CopyStream(SplitWriter io.Writer, GetReader io.Reader, Cfg *local.Config) error {
+func CopyStream(SplitWriter io.Writer, GetReader io.Reader, Cfg *Config) error {
 	for { //cycle reads Get-Body, ChunkSize bytes at a time
 		_, copyErr := io.CopyN(SplitWriter, GetReader, int64(Cfg.ChunkSize)) //read body
 
@@ -84,7 +83,7 @@ func CopyStream(SplitWriter io.Writer, GetReader io.Reader, Cfg *local.Config) e
 }
 
 //Returns -1 if can't get to package
-func GetCorrectSize(ReqPath string, Cfg *local.Config) int64 {
+func GetCorrectSize(ReqPath string, Cfg *Config) int64 {
 	CurrentMirrorIndex := 0
 	var httpClient = new(http.Client)
 	var CurrentMirror url.URL

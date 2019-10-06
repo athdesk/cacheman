@@ -1,17 +1,10 @@
 package local
 
 import (
+	. "cacheman/shared"
 	"net/url"
 	"strings"
 )
-
-type Config struct {
-	CacheDir     string
-	HostAddr     string
-	ChunkSize    int
-	MirrorList   []*url.URL
-	MirrorSuffix string
-}
 
 func GetConfig(Cfg *Config) {
 	Cfg.CacheDir = "/home/mario/cacheman" //TODO: get config from a file
