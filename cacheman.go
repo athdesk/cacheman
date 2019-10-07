@@ -7,12 +7,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 var Cfg Config
 
 func main() {
 	local.GetConfig(&Cfg)
+	go func() {
+		for {
+			fmt.Println(Cfg)
+			time.Sleep(10 * time.Second)
+		}
+	}()
 	local.GetMirrorList(&Cfg)
 	//TODO: handle errors
 	http.HandleFunc("/", HandleReq)
@@ -29,7 +36,7 @@ func HandleReq(w http.ResponseWriter, r *http.Request) {
 
 	if local.FileExists(RequestedLocalPath) { //is file cached?
 		ThisFile := FindFile(Cfg.CachingFiles, RequestedPath)
-		if ThisFile == nil || ThisFile.Completed || ThisFile.Errored {
+		if ThisFile == nil || ThisFile.Completed {
 			if !local.IsFileExcluded(RequestedLocalPath, &Cfg) {
 				RemoteRequired = !local.ServeCachedFile(w, r, RequestedLocalPath, &Cfg) //if file has been already cached, ...
 			}

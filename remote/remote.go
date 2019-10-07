@@ -55,22 +55,20 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 			StreamingError := CopyStream(SplitWr, GetResp.Body, ThisFile, Cfg)
 
 			if InnerError, IsOpErr := StreamingError.(*net.OpError); IsOpErr { //unfolds net.OpError, which in our desired case contains
-				StreamingError = InnerError.Err //os.SyscallError, which is unfolded to show our Errno
+				StreamingError = InnerError.Err //os.SyscallError, which is itself unfolded to show our Errno
 				if InnerError, IsSyscallErr := StreamingError.(*os.SyscallError); IsSyscallErr {
 					StreamingError = InnerError.Err
 				}
 			}
-			if StreamingError == syscall.EPIPE { //if the original client stopped downloading the file, we continue downloading it
+			if StreamingError == syscall.EPIPE { //even when the original client stops downloading a file, we continue downloading it
 				StreamToFile(OutFile, GetResp.Body, ThisFile, Cfg)
 			}
 			if StreamingError != nil && StreamingError != syscall.EPIPE {
-				ThisFile.Errored = true //marking errored for next request
 				Halting = true
 			}
 
-			ThisFile.Completed = true //marking done no matter what, doesn't matter
-
 			_ = GetResp.Body.Close()
+			Cfg.CachingFiles = WaitAndDelete(ThisFile, Cfg.CachingFiles)
 			break
 		}
 
