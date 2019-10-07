@@ -20,7 +20,7 @@ func GetConfig(Cfg *Config) {
 
 	var Intermediary basicCfg
 	ConfigData, _ := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
-	_ = toml.Unmarshal(ConfigData, Intermediary)
+	_ = toml.Unmarshal(ConfigData, &Intermediary)
 
 	Cfg.CacheDir = Intermediary.CacheDir
 	Cfg.HostAddr = Intermediary.HostAddr
