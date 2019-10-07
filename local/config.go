@@ -2,18 +2,31 @@ package local
 
 import (
 	. "cacheman/shared"
+	"github.com/BurntSushi/toml"
+	"io/ioutil"
 	"net/url"
 	"strings"
 )
 
+type basicCfg struct {
+	CacheDir     string
+	HostAddr     string
+	ChunkSize    int
+	MirrorSuffix string
+	ExcludedExts []string
+}
+
 func GetConfig(Cfg *Config) {
-	Cfg.CacheDir = "/home/mario/cacheman" //TODO: get config from a file
-	Cfg.HostAddr = ":8080"
-	Cfg.ChunkSize = 1024
-	Cfg.MirrorSuffix = "$repo/os/$arch"
-	Cfg.ExcludedExts = make([]string, 2)
-	Cfg.ExcludedExts[0] = "db"
-	Cfg.ExcludedExts[1] = "sig"
+
+	var Intermediary basicCfg
+	ConfigData, _ := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
+	_ = toml.Unmarshal(ConfigData, &Intermediary)
+
+	Cfg.CacheDir = Intermediary.CacheDir
+	Cfg.HostAddr = Intermediary.HostAddr
+	Cfg.ChunkSize = Intermediary.ChunkSize
+	Cfg.MirrorSuffix = Intermediary.MirrorSuffix
+	Cfg.ExcludedExts = Intermediary.ExcludedExts
 	Cfg.CachingFiles = make([]*CachingFile, 0)
 }
 
