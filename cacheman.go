@@ -7,27 +7,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 )
 
 var Cfg Config
 
 func main() {
 	local.GetConfig(&Cfg)
-	go func() {
-		for {
-			fmt.Println(Cfg)
-			time.Sleep(10 * time.Second)
-		}
-	}()
 	local.GetMirrorList(&Cfg)
-	//TODO: handle errors
 	http.HandleFunc("/", HandleReq)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func HandleReq(w http.ResponseWriter, r *http.Request) {
-	//TODO: Handle case where 2+ computers are downloading the same file
 	RequestedLocalPath := Cfg.CacheDir + "/" + r.URL.Path[1:] //add cachedir to path, to not check in /
 	RequestedPath := r.URL.Path[1:]
 	fmt.Printf("File requested: %s\n", RequestedPath)
