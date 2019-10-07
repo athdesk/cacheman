@@ -19,6 +19,7 @@ func main() {
 }
 
 func HandleReq(w http.ResponseWriter, r *http.Request) {
+	//TODO: review public and private functions
 	RequestedLocalPath := Cfg.CacheDir + "/" + r.URL.Path[1:] //add cachedir to path, to not check in /
 	RequestedPath := r.URL.Path[1:]
 	fmt.Printf("File requested: %s\n", RequestedPath)
