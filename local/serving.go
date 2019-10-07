@@ -47,3 +47,16 @@ func ServeFile(w http.ResponseWriter, path string, Cfg *Config) bool {
 	fmt.Printf("Served file %s. Average speed: %f kB/s \n", path, avgSpeed)
 	return true
 }
+
+func ServeCachedFile(w http.ResponseWriter, r *http.Request, path string, Cfg *Config) bool {
+	AbsPath := strings.ReplaceAll(path, Cfg.CacheDir, "")
+
+	ExpectedSize := remote.GetCorrectSize(AbsPath, Cfg)
+	RealSize := FileSize(path)
+	if ExpectedSize != -1 && RealSize != ExpectedSize {
+		return false // if filesize is mismatched serve it from remote server, this will redownload the file
+	}
+
+	http.ServeFile(w, r, path) //does not serve paths containing /../, supports byte ranges
+	return true
+}
