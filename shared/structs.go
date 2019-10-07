@@ -20,6 +20,5 @@ type CachingFile struct {
 	BytesRead  int64
 	SizeHeader string
 	Completed  bool
-	Errored    bool
 	InUse      bool
 }
