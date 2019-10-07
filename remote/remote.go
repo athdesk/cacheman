@@ -2,18 +2,17 @@ package remote
 
 import (
 	. "cacheman/shared"
-	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"strconv"
+	"syscall"
 )
 
 func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
-	fmt.Println("Serving remotely")
-
 	Halting := false
 	NonExistent := false
 	LocalPath := Cfg.CacheDir + "/" + ReqPath
@@ -22,6 +21,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 	var httpClient = new(http.Client)
 	var CurrentMirror url.URL
 	var PackageURL url.URL
+	var ThisFile *CachingFile
 
 	OutFile, _ := os.Create(LocalPath)
 
@@ -50,16 +50,34 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 			w.Header().Add("Content-Length", FileSize)       //and send it to our client
 			w.WriteHeader(200)
 
+			ThisFile = AddFileToList(ReqPath, LocalPath, FileSize, Cfg)
 			SplitWr := io.MultiWriter(OutFile, w)
-			StreamingError := CopyStream(SplitWr, GetResp.Body, Cfg)
-			Halting = StreamingError != nil //if there's an error, delete the file
+			StreamingError := CopyStream(SplitWr, GetResp.Body, ThisFile, Cfg)
+
+			if InnerError, IsOpErr := StreamingError.(*net.OpError); IsOpErr { //unfolds net.OpError, which in our desired case contains
+				StreamingError = InnerError.Err //os.SyscallError, which is unfolded to show our Errno
+				if InnerError, IsSyscallErr := StreamingError.(*os.SyscallError); IsSyscallErr {
+					StreamingError = InnerError.Err
+				}
+			}
+			if StreamingError == syscall.EPIPE { //if the original client stopped downloading the file, we continue downloading it
+				StreamToFile(OutFile, GetResp.Body, ThisFile, Cfg)
+			}
+			if StreamingError != nil && StreamingError != syscall.EPIPE {
+				ThisFile.Errored = true //marking errored for next request
+				Halting = true
+			}
+
+			ThisFile.Completed = true //marking done no matter what, doesn't matter
+
 			_ = GetResp.Body.Close()
 			break
 		}
 
 	}
 
-	OutFile.Close()
+	_ = OutFile.Close()
+
 	if Halting {
 		_ = os.Remove(LocalPath)
 	}
@@ -69,16 +87,29 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 
 }
 
-func CopyStream(SplitWriter io.Writer, GetReader io.Reader, Cfg *Config) error {
+func CopyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *CachingFile, Cfg *Config) error {
 	for { //cycle reads Get-Body, ChunkSize bytes at a time
-		_, copyErr := io.CopyN(SplitWriter, GetReader, int64(Cfg.ChunkSize)) //read body
+		BytesRead, CopyErr := io.CopyN(SplitWriter, GetReader, int64(Cfg.ChunkSize)) //read body
+		FileDesc.BytesRead += BytesRead
 
-		if copyErr != nil && copyErr != io.EOF { //stream errored, not because file is over: delete file and move on
-			return copyErr
-		} else if copyErr == io.EOF { // stream errored because file is over: close gracefully
+		if CopyErr != nil && CopyErr != io.EOF && CopyErr != io.ErrClosedPipe {
+			return CopyErr //stream errored, not because file is over/connection closed: delete file and move on
+		} else if CopyErr == io.EOF { // stream errored because file is over: close gracefully
 			return nil
+		} else if CopyErr != nil {
+			return CopyErr
 		}
 
+	}
+}
+
+func StreamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *CachingFile, Cfg *Config) {
+	for { //cycle reads Get-Body, ChunkSize bytes at a time
+		BytesRead, CopyErr := io.CopyN(FileWriter, GetReader, int64(Cfg.ChunkSize)) //read body
+		FileDesc.BytesRead += BytesRead
+		if CopyErr != nil {
+			break
+		}
 	}
 }
 

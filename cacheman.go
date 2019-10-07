@@ -20,7 +20,6 @@ func main() {
 }
 
 func HandleReq(w http.ResponseWriter, r *http.Request) {
-	//TODO: Sanitize request input
 	//TODO: Handle case where 2+ computers are downloading the same file
 	RequestedLocalPath := Cfg.CacheDir + "/" + r.URL.Path[1:] //add cachedir to path, to not check in /
 	RequestedPath := r.URL.Path[1:]
@@ -29,8 +28,13 @@ func HandleReq(w http.ResponseWriter, r *http.Request) {
 	RemoteRequired := true
 
 	if local.FileExists(RequestedLocalPath) { //is file cached?
-		if !local.IsFileExcluded(RequestedLocalPath, &Cfg) {
-			RemoteRequired = !local.ServeFile(w, RequestedLocalPath, &Cfg)
+		ThisFile := FindFile(Cfg.CachingFiles, RequestedPath)
+		if ThisFile == nil || ThisFile.Completed || ThisFile.Errored {
+			if !local.IsFileExcluded(RequestedLocalPath, &Cfg) {
+				RemoteRequired = !local.ServeCachedFile(w, r, RequestedLocalPath, &Cfg) //if file has been already cached, ...
+			}
+		} else { //if file is BEING cached right now, ...
+			ThisFile.ServeCachingFile(w, &Cfg)
 		}
 	}
 

@@ -14,6 +14,7 @@ func GetConfig(Cfg *Config) {
 	Cfg.ExcludedExts = make([]string, 2)
 	Cfg.ExcludedExts[0] = "db"
 	Cfg.ExcludedExts[1] = "sig"
+	Cfg.CachingFiles = make([]*CachingFile, 0)
 }
 
 func GetMirrorList(Cfg *Config) {
