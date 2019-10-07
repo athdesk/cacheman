@@ -76,7 +76,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 
 	}
 
-	OutFile.Close()
+	_ = OutFile.Close()
 
 	if Halting {
 		_ = os.Remove(LocalPath)
