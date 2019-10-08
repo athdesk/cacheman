@@ -15,7 +15,10 @@ import (
 
 func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 
-	//if there's no valid mirrors, wait till we have, eventually pacman will timeout us out anyway
+	//if there's no valid mirrors, wait till we have
+	//if it's because of refreshing, everything good
+	//if it's because of network issues, pacman will timeout us
+	//once timeouted, we download the file anyway to keep it cached
 	for len(Cfg.MirrorList) < 1 {
 		time.Sleep(10 * time.Millisecond)
 	}

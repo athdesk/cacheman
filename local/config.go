@@ -71,6 +71,7 @@ func checkMirrorStatus(Cfg *Config) {
 		if len(ValidMirrors) > 0 {
 			MirTimeout = Cfg.MirrorRefreshTimeout
 		}
+		fmt.Printf("[MIRROR] %d out of %d mirrors are valid", len(ValidMirrors), len(Cfg.FullMirrorList))
 		time.Sleep(MirTimeout)
 	}
 }
