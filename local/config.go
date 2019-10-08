@@ -21,8 +21,16 @@ type basicCfg struct {
 func GetConfig(Cfg *Config) {
 
 	var Intermediary basicCfg
-	ConfigData, _ := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
-	_ = toml.Unmarshal(ConfigData, &Intermediary)
+
+	ConfigData, Err := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
+	if Err != nil {
+		panic(Err)
+	}
+
+	Err = toml.Unmarshal(ConfigData, &Intermediary)
+	if Err != nil {
+		panic(Err)
+	}
 
 	Cfg.CacheDir = Intermediary.CacheDir
 	Cfg.HostAddr = Intermediary.HostAddr
@@ -31,9 +39,10 @@ func GetConfig(Cfg *Config) {
 	Cfg.MirrorRefreshTimeout = time.Duration(Intermediary.MirrorRefreshTimeout) * time.Second
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
 	Cfg.CachingFiles = make([]*CachingFile, 0)
+	getMirrorList(Cfg)
 }
 
-func GetMirrorList(Cfg *Config) {
+func getMirrorList(Cfg *Config) {
 	//TODO: get mirrorlist from a file
 	Cfg.FullMirrorList = make([]*url.URL, 4)
 	StrMirrorList := make([]string, 4)
