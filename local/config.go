@@ -2,9 +2,7 @@ package local
 
 import (
 	. "cacheman/shared"
-	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/sparrc/go-ping"
 	"io/ioutil"
 	"net/url"
 	"strings"
@@ -23,8 +21,16 @@ type basicCfg struct {
 func GetConfig(Cfg *Config) {
 
 	var Intermediary basicCfg
-	ConfigData, _ := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
-	_ = toml.Unmarshal(ConfigData, &Intermediary)
+
+	ConfigData, Err := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
+	if Err != nil {
+		panic(Err)
+	}
+
+	Err = toml.Unmarshal(ConfigData, &Intermediary)
+	if Err != nil {
+		panic(Err)
+	}
 
 	Cfg.CacheDir = Intermediary.CacheDir
 	Cfg.HostAddr = Intermediary.HostAddr
@@ -33,9 +39,10 @@ func GetConfig(Cfg *Config) {
 	Cfg.MirrorRefreshTimeout = time.Duration(Intermediary.MirrorRefreshTimeout) * time.Second
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
 	Cfg.CachingFiles = make([]*CachingFile, 0)
+	getMirrorList(Cfg)
 }
 
-func GetMirrorList(Cfg *Config) {
+func getMirrorList(Cfg *Config) {
 	//TODO: get mirrorlist from a file
 	Cfg.FullMirrorList = make([]*url.URL, 4)
 	StrMirrorList := make([]string, 4)
@@ -48,55 +55,4 @@ func GetMirrorList(Cfg *Config) {
 		Cfg.FullMirrorList[Index], _ = url.Parse(strings.ReplaceAll(StrMirrorList[Index], Cfg.MirrorSuffix, ""))
 	}
 	go checkMirrorStatus(Cfg)
-}
-
-func checkMirrorStatus(Cfg *Config) {
-	for {
-		fmt.Println("[MIRROR] Refreshing valid mirror list...")
-		var CompletedJobs = 0
-		var StartedJobs = 0
-		var ValidMirrors []*url.URL
-
-		for _, Mirror := range Cfg.FullMirrorList {
-			StartedJobs++
-			go checkAndAdd(Mirror, &ValidMirrors, &CompletedJobs)
-		}
-
-		for StartedJobs > CompletedJobs {
-			time.Sleep(10 * time.Millisecond)
-		}
-
-		Cfg.MirrorList = ValidMirrors
-		MirTimeout := 10 * time.Millisecond //if we have no mirrors, don't wait for refresh timeout
-		if len(ValidMirrors) > 0 {
-			MirTimeout = Cfg.MirrorRefreshTimeout
-		}
-		fmt.Printf("[MIRROR] %d out of %d mirrors are valid", len(ValidMirrors), len(Cfg.FullMirrorList))
-		time.Sleep(MirTimeout)
-	}
-}
-
-func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int) {
-	if isAlive(*Mirror) {
-		*ValidMirrors = append(*ValidMirrors, Mirror)
-		fmt.Printf("[MIRROR] %s is alive!\n", Mirror.Host)
-	} else {
-		fmt.Printf("[MIRROR] %s is dead!\n", Mirror.Host)
-	}
-	*Counter++
-}
-
-func isAlive(url url.URL) bool {
-	//requires sudo sysctl -w net.ipv4.ping_group_range="0   2147483647"
-	Address := url.Host
-	HostPinger, Err := ping.NewPinger(Address)
-	if Err != nil {
-		return false
-	} //if the name is malformed/host doesn't exist
-
-	HostPinger.Count = 2
-	HostPinger.Timeout = 1200 * time.Millisecond
-
-	HostPinger.Run()
-	return HostPinger.Statistics().PacketsRecv > 0
 }

@@ -7,22 +7,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 var Cfg Config
 
 func main() {
 	local.GetConfig(&Cfg)
-	local.GetMirrorList(&Cfg)
-	http.HandleFunc("/", HandleReq)
+	http.HandleFunc("/", handleReq)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func HandleReq(w http.ResponseWriter, r *http.Request) {
-	//TODO: review public and private functions
+func handleReq(w http.ResponseWriter, r *http.Request) {
+	NowStr := time.Now().Format(time.Kitchen)
 	RequestedLocalPath := Cfg.CacheDir + "/" + r.URL.Path[1:] //add cachedir to path, to not check in /
 	RequestedPath := r.URL.Path[1:]
-	fmt.Printf("File requested: %s\n", RequestedPath)
+	fmt.Printf("[SERVER %s] File requested: %s\n", NowStr, RequestedPath)
 
 	RemoteRequired := true
 
