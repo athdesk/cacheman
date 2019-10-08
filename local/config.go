@@ -53,7 +53,7 @@ func GetMirrorList(Cfg *Config) {
 func checkMirrorStatus(Cfg *Config) {
 	NowStr := time.Now().Format(time.Kitchen)
 	for {
-		fmt.Printf("[MIRROR %s ] Refreshing valid mirror list...\n", NowStr)
+		fmt.Printf("[MIRROR %s] Refreshing valid mirror list...\n", NowStr)
 		var CompletedJobs = 0
 		var StartedJobs = 0
 		var ValidMirrors []*url.URL
@@ -72,7 +72,7 @@ func checkMirrorStatus(Cfg *Config) {
 		if len(ValidMirrors) > 0 {
 			MirTimeout = Cfg.MirrorRefreshTimeout
 		}
-		fmt.Printf("[MIRROR %s ] %d out of %d mirrors are valid\n", NowStr, len(ValidMirrors), len(Cfg.FullMirrorList))
+		fmt.Printf("[MIRROR %s] %d out of %d mirrors are valid\n", NowStr, len(ValidMirrors), len(Cfg.FullMirrorList))
 		time.Sleep(MirTimeout)
 	}
 }
@@ -81,9 +81,9 @@ func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int) {
 	NowStr := time.Now().Format(time.Kitchen)
 	if isAlive(*Mirror) {
 		*ValidMirrors = append(*ValidMirrors, Mirror)
-		fmt.Printf("[MIRROR %s ] %s is alive!\n", NowStr, Mirror.Host)
+		fmt.Printf("[MIRROR %s] %s is alive!\n", NowStr, Mirror.Host)
 	} else {
-		fmt.Printf("[MIRROR %s ] %s is dead!\n", NowStr, Mirror.Host)
+		fmt.Printf("[MIRROR %s] %s is dead!\n", NowStr, Mirror.Host)
 	}
 	*Counter++
 }
