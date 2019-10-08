@@ -51,18 +51,21 @@ func GetMirrorList(Cfg *Config) {
 }
 
 func checkMirrorStatus(Cfg *Config) {
-	//TODO: parallelize this
 	for {
 		fmt.Println("[MIRROR] Refreshing valid mirror list...")
+		var CompletedJobs int = 0
+		var StartedJobs int = 0
 		var ValidMirrors []*url.URL
+
 		for _, Mirror := range Cfg.FullMirrorList {
-			if isAlive(*Mirror) {
-				ValidMirrors = append(ValidMirrors, Mirror)
-				fmt.Printf("[MIRROR] %s is alive!\n", Mirror.Host)
-			} else {
-				fmt.Printf("[MIRROR] %s is dead!\n", Mirror.Host)
-			}
+			StartedJobs++
+			go checkAndAdd(Mirror, &ValidMirrors, &CompletedJobs)
 		}
+
+		for StartedJobs > CompletedJobs {
+			time.Sleep(10 * time.Millisecond)
+		}
+
 		Cfg.MirrorList = ValidMirrors
 		MirTimeout := 10 * time.Millisecond //if we have no mirrors, don't wait for refresh timeout
 		if len(ValidMirrors) > 0 {
@@ -70,6 +73,16 @@ func checkMirrorStatus(Cfg *Config) {
 		}
 		time.Sleep(MirTimeout)
 	}
+}
+
+func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int) {
+	if isAlive(*Mirror) {
+		*ValidMirrors = append(*ValidMirrors, Mirror)
+		fmt.Printf("[MIRROR] %s is alive!\n", Mirror.Host)
+	} else {
+		fmt.Printf("[MIRROR] %s is dead!\n", Mirror.Host)
+	}
+	*Counter++
 }
 
 func isAlive(url url.URL) bool {
