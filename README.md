@@ -15,7 +15,7 @@ $ sudo systemctl enable cacheman --now
 Configuration
 -----
 ```
-# nano /etc/cacheman.conf 
+# nano /etc/cacheman/cacheman.conf 
 ```
 
 Usage
