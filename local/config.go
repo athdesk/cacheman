@@ -53,8 +53,8 @@ func GetMirrorList(Cfg *Config) {
 func checkMirrorStatus(Cfg *Config) {
 	for {
 		fmt.Println("[MIRROR] Refreshing valid mirror list...")
-		var CompletedJobs int = 0
-		var StartedJobs int = 0
+		var CompletedJobs = 0
+		var StartedJobs = 0
 		var ValidMirrors []*url.URL
 
 		for _, Mirror := range Cfg.FullMirrorList {
@@ -86,7 +86,7 @@ func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int) {
 }
 
 func isAlive(url url.URL) bool {
-	//TODO: sudo sysctl -w net.ipv4.ping_group_range="0   2147483647"
+	//requires sudo sysctl -w net.ipv4.ping_group_range="0   2147483647"
 	Address := url.Host
 	HostPinger, Err := ping.NewPinger(Address)
 	if Err != nil {
