@@ -10,9 +10,16 @@ import (
 	"path"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
+
+	//if there's no valid mirrors, wait till we have, eventually pacman will timeout us out anyway
+	for len(Cfg.MirrorList) < 1 {
+		time.Sleep(10 * time.Millisecond)
+	}
+
 	Halting := false
 	NonExistent := false
 	LocalPath := Cfg.CacheDir + "/" + ReqPath
@@ -26,17 +33,18 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 	OutFile, _ := os.Create(LocalPath)
 
 	for { //execute cycle for each mirror, will break if download is successful
+		var MirrorBad bool
+
 		CurrentMirror = *Cfg.MirrorList[CurrentMirrorIndex]
 		PackageURL = CurrentMirror
 		PackageURL.Path = path.Join(PackageURL.Path, ReqPath)
 		GetResp, GetErr := httpClient.Get(PackageURL.String())
-		MirrorBad := false
 
 		if GetErr != nil || GetResp.StatusCode == 404 {
 			MirrorBad = true
 		} //is there a problem with the mirror?
 
-		if MirrorBad || GetErr != nil { //moves to the next mirror, if possible
+		if MirrorBad { //moves to the next mirror, if possible
 			CurrentMirrorIndex++
 			if CurrentMirrorIndex >= len(Cfg.MirrorList) {
 				CurrentMirrorIndex = 0
