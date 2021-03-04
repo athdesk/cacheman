@@ -1,12 +1,13 @@
 package local
 
 import (
-	. "cacheman/shared"
-	"github.com/BurntSushi/toml"
+	"cacheman/shared"
 	"io/ioutil"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/BurntSushi/toml"
 )
 
 type basicCfg struct {
@@ -18,7 +19,8 @@ type basicCfg struct {
 	ExcludedExts         []string
 }
 
-func GetConfig(Cfg *Config) {
+//PutConfig populates a Cfg struct with settings from the config files
+func PutConfig(Cfg *shared.Config) {
 
 	var Intermediary basicCfg
 
@@ -38,12 +40,12 @@ func GetConfig(Cfg *Config) {
 	Cfg.MirrorSuffix = Intermediary.MirrorSuffix
 	Cfg.MirrorRefreshTimeout = time.Duration(Intermediary.MirrorRefreshTimeout) * time.Second
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
-	Cfg.CachingFiles = make([]*CachingFile, 0)
-	getMirrorList(Cfg)
+	Cfg.CachingFiles = make([]*shared.CachingFile, 0)
+	putMirrorList(Cfg)
 }
 
-func getMirrorList(Cfg *Config) {
-	//TODO: get mirrorlist from a file
+func putMirrorList(Cfg *shared.Config) {
+	//TODO: get mirrorlist from an actual file
 	Cfg.FullMirrorList = make([]*url.URL, 4)
 	StrMirrorList := make([]string, 4)
 	StrMirrorList[0] = "http://mirrors.nonexistent.com/archlinux/$repo/os/$arch"

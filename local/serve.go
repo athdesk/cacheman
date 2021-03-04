@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+//ServeCachedFile Takes a requests and fulfills it with a cached file
 func ServeCachedFile(w http.ResponseWriter, r *http.Request, path string, Cfg *shared.Config) bool {
 	AbsPath := strings.ReplaceAll(path, Cfg.CacheDir, "")
 

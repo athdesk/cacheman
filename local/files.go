@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+//FileExists checks if a file exists, and is not a directory
 func FileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
@@ -15,6 +16,7 @@ func FileExists(filename string) bool {
 	return !info.IsDir()
 }
 
+//DirExists checks if a directory exists, and is a directory
 func DirExists(dirname string) bool {
 	info, err := os.Stat(dirname)
 	if os.IsNotExist(err) {
@@ -23,6 +25,7 @@ func DirExists(dirname string) bool {
 	return info.IsDir()
 }
 
+//FileSize safely returns a file size, if it exists
 func FileSize(filename string) int64 {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
@@ -31,14 +34,16 @@ func FileSize(filename string) int64 {
 	return info.Size()
 }
 
-func BuildDirTreeForFile(path string) error {
-	realPath := filepath.Dir(path)
+//BuildDirTreeForFile makes sure that the proper directory structure for a chosen filepath exists
+func BuildDirTreeForFile(fpath string) error {
+	realPath := filepath.Dir(fpath)
 	if !DirExists(realPath) {
 		return os.MkdirAll(realPath, 0755)
 	}
 	return nil
 }
 
+//IsFileExcluded checks if a file has a blacklisted extension
 func IsFileExcluded(path string, Cfg *shared.Config) bool {
 	SplitPath := strings.Split(path, ".")
 	for _, Excl := range Cfg.ExcludedExts {
