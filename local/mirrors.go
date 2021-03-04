@@ -9,8 +9,8 @@ import (
 )
 
 func checkMirrorStatus(Cfg *shared.Config) {
-	NowStr := time.Now().Format(time.Kitchen)
 	for {
+		NowStr := time.Now().Format(time.Kitchen)
 		fmt.Printf("[MIRROR %s] Refreshing valid mirror list...\n", NowStr)
 		var CompletedJobs = 0
 		var StartedJobs = 0

@@ -1,7 +1,7 @@
 package remote
 
 import (
-	. "cacheman/shared"
+	"cacheman/shared"
 	"fmt"
 	"io"
 	"net"
@@ -13,7 +13,8 @@ import (
 	"time"
 )
 
-func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
+//ServeFile serves the requested file to an http.ResponseWriter
+func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *shared.Config) {
 
 	//if there's no valid mirrors, wait till we have
 	//if it's because of refreshing, everything good
@@ -31,7 +32,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 	var httpClient = new(http.Client)
 	var CurrentMirror url.URL
 	var PackageURL url.URL
-	var ThisFile *CachingFile
+	var ThisFile *shared.CachingFile
 
 	OutFile, _ := os.Create(LocalPath)
 
@@ -61,7 +62,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 			w.Header().Add("Server", Cfg.ServerAgent)
 			// w.WriteHeader(200)
 
-			ThisFile = AddFileToList(ReqPath, LocalPath, FileSize, Cfg)
+			ThisFile = shared.AddFileToList(ReqPath, LocalPath, FileSize, Cfg)
 			SplitWr := io.MultiWriter(OutFile, w)
 			StreamingError := copyStream(SplitWr, GetResp.Body, ThisFile, Cfg)
 
@@ -79,7 +80,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 			}
 
 			_ = GetResp.Body.Close()
-			Cfg.CachingFiles = WaitAndDelete(ThisFile, Cfg.CachingFiles)
+			Cfg.CachingFiles = shared.WaitAndDelete(ThisFile, Cfg.CachingFiles)
 			break
 		}
 
