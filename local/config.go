@@ -50,10 +50,10 @@ func putMirrorList(Cfg *shared.Config) {
 	//TODO: get mirrorlist from an actual file
 	Cfg.FullMirrorList = make([]*url.URL, 4)
 	StrMirrorList := make([]string, 4)
-	StrMirrorList[0] = "http://mirrors.nonexistent.com/archlinux/$repo/os/$arch"
-	StrMirrorList[1] = "http://mirrors.prometeusaa.net/archlinux/$repo/os/$arch"
-	StrMirrorList[2] = "http://mirrors.nonexistentasda.com/archlinux/$repo/os/$arch"
-	StrMirrorList[3] = "http://mirrors.prometeus.net/archlinux/$repo/os/$arch"
+	StrMirrorList[0] = "http://mirror.fra10.de.leaseweb.net/archlinux/$repo/os/$arch"
+	StrMirrorList[1] = "http://mirror.tarellia.net/distr/archlinux/$repo/os/$arch"
+	StrMirrorList[2] = "http://arch.midov.pl/arch/$repo/os/$arch"
+	StrMirrorList[3] = "http://mirror.selfnet.de/archlinux/$repo/os/$arch"
 
 	for Index := 0; Index < len(Cfg.FullMirrorList); Index++ { //strips suffix from mirror urls, parses them
 		Cfg.FullMirrorList[Index], _ = url.Parse(strings.ReplaceAll(StrMirrorList[Index], Cfg.MirrorSuffix, ""))

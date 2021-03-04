@@ -2,6 +2,7 @@ package remote
 
 import (
 	. "cacheman/shared"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -34,11 +35,14 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 
 	OutFile, _ := os.Create(LocalPath)
 
-	for { //execute cycle for each mirror, will break if download is successful
+	for { // will break if either download is successful or no mirrors left
+		NowStr := time.Now().Format(time.Kitchen)
 		CurrentMirror = *Cfg.MirrorList[CurrentMirrorIndex]
 		PackageURL = CurrentMirror
 		PackageURL.Path = path.Join(PackageURL.Path, ReqPath)
 		GetResp, GetErr := httpClient.Get(PackageURL.String())
+
+		fmt.Printf("[REMOTE %s] Getting file %s from mirror %d\n", NowStr, PackageURL.String(), CurrentMirrorIndex)
 
 		//is there a problem with the mirror?
 		if GetErr != nil || GetResp.StatusCode == 404 { //moves to the next mirror, if possible
@@ -47,13 +51,15 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *Config) {
 				CurrentMirrorIndex = 0
 				NonExistent = true
 				Halting = true
+				fmt.Printf("[REMOTE %s] No more mirrors left\n", NowStr)
 				break
 			}
 		} else { //mirror ok, start downloading
 
 			FileSize := GetResp.Header.Get("Content-Length") //copy size from remote header
 			w.Header().Add("Content-Length", FileSize)       //and send it to our client
-			w.WriteHeader(200)
+			w.Header().Add("Server", Cfg.ServerAgent)
+			// w.WriteHeader(200)
 
 			ThisFile = AddFileToList(ReqPath, LocalPath, FileSize, Cfg)
 			SplitWr := io.MultiWriter(OutFile, w)

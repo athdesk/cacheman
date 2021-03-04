@@ -3,10 +3,9 @@ package local
 import (
 	"cacheman/shared"
 	"fmt"
+	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/go-ping/ping"
 )
 
 func checkMirrorStatus(Cfg *shared.Config) {
@@ -26,7 +25,7 @@ func checkMirrorStatus(Cfg *shared.Config) {
 			time.Sleep(10 * time.Millisecond)
 		}
 
-		MirTimeout := 10 * time.Millisecond //if we have no mirrors, don't wait for refresh timeout
+		MirTimeout := 1000 * time.Millisecond //if we have no mirrors, don't wait for refresh timeout
 		if len(ValidMirrors) > 0 {
 			MirTimeout = Cfg.MirrorRefreshTimeout
 		}
@@ -48,16 +47,9 @@ func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *s
 }
 
 func isAlive(url url.URL) bool {
-	//requires sudo sysctl -w net.ipv4.ping_group_range="0   2147483647"
-	Address := url.Host
-	HostPinger, Err := ping.NewPinger(Address)
+	_, Err := http.Get(url.String())
 	if Err != nil {
 		return false
-	} //if the name is malformed/host doesn't exist
-
-	HostPinger.Count = 2
-	HostPinger.Timeout = 1200 * time.Millisecond
-
-	HostPinger.Run()
-	return HostPinger.Statistics().PacketsRecv > 0
+	}
+	return true
 }
