@@ -1,14 +1,15 @@
 package local
 
 import (
-	. "cacheman/shared"
+	"cacheman/shared"
 	"fmt"
-	"github.com/go-ping/ping"
 	"net/url"
 	"time"
+
+	"github.com/go-ping/ping"
 )
 
-func checkMirrorStatus(Cfg *Config) {
+func checkMirrorStatus(Cfg *shared.Config) {
 	NowStr := time.Now().Format(time.Kitchen)
 	for {
 		fmt.Printf("[MIRROR %s] Refreshing valid mirror list...\n", NowStr)
@@ -34,7 +35,7 @@ func checkMirrorStatus(Cfg *Config) {
 	}
 }
 
-func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *Config) {
+func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *shared.Config) {
 	NowStr := time.Now().Format(time.Kitchen)
 	if isAlive(*Mirror) {
 		*ValidMirrors = append(*ValidMirrors, Mirror)

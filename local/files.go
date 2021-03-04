@@ -1,7 +1,7 @@
 package local
 
 import (
-	. "cacheman/shared"
+	"cacheman/shared"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,9 +27,8 @@ func FileSize(filename string) int64 {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return 0
-	} else {
-		return info.Size()
 	}
+	return info.Size()
 }
 
 func BuildDirTreeForFile(path string) error {
@@ -40,7 +39,7 @@ func BuildDirTreeForFile(path string) error {
 	return nil
 }
 
-func IsFileExcluded(path string, Cfg *Config) bool {
+func IsFileExcluded(path string, Cfg *shared.Config) bool {
 	SplitPath := strings.Split(path, ".")
 	for _, Excl := range Cfg.ExcludedExts {
 		if SplitPath[len(SplitPath)-1] == Excl {
