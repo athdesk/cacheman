@@ -15,6 +15,7 @@ type Config struct {
 	MirrorRefreshTimeout time.Duration
 	ExcludedExts         []string
 	CachingFiles         []*CachingFile //Caching files array is getting carried by Config, as it's program global
+	ServerAgent          string
 }
 
 type CachingFile struct {

@@ -13,6 +13,7 @@ import (
 type basicCfg struct {
 	CacheDir             string
 	HostAddr             string
+	MirrorlistPath       string
 	ChunkSize            int
 	MirrorSuffix         string
 	MirrorRefreshTimeout int
@@ -41,6 +42,7 @@ func PutConfig(Cfg *shared.Config) {
 	Cfg.MirrorRefreshTimeout = time.Duration(Intermediary.MirrorRefreshTimeout) * time.Second
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
 	Cfg.CachingFiles = make([]*shared.CachingFile, 0)
+	Cfg.ServerAgent = "cacheman"
 	putMirrorList(Cfg)
 }
 
@@ -58,3 +60,33 @@ func putMirrorList(Cfg *shared.Config) {
 	}
 	go checkMirrorStatus(Cfg)
 }
+
+/*
+EXAMPLE CONFIG FILE
+
+# Directory where cacheman is going to store packages
+# make sure it's accessible by the user that's going to run cacheman
+CacheDir = "/home/mario/cacheman"
+
+# Address and port on which cacheman is going to run
+# use ":PORT" to serve all interfaces
+# make sure to use an high enough port if you haven't got enough privileges
+HostAddr = ":8080"
+
+# Path to the mirrorlist that cacheman should use
+MirrorlistPath = "/etc/pacman.d/mirrorlist"
+
+# Buffer size for streaming operations
+ChunkSize = 1024
+
+# Mirror URL suffix, please don't touch if you don't know what you're doing
+MirrorSuffix = "$repo/os/$arch"
+
+# Time range in seconds every which the mirrorlist will be checked for dead hosts
+MirrorRefreshTimeout = 300
+
+# Extensions to exclude from caching, please don't touch if you don't know what you're doing
+ExcludedExts = ["db", "sig"]
+
+
+*/
