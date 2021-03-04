@@ -3,7 +3,7 @@ package local
 import (
 	. "cacheman/shared"
 	"fmt"
-	"github.com/sparrc/go-ping"
+	"github.com/go-ping/ping"
 	"net/url"
 	"time"
 )
