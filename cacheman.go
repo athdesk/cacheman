@@ -27,7 +27,7 @@ func handleReq(w http.ResponseWriter, r *http.Request) {
 	RemoteRequired := true
 
 	if local.FileExists(RequestedLocalPath) { //is file cached?
-		ThisFile := FindFile(cfg.CachingFiles, RequestedPath)
+		ThisFile := shared.FindFile(cfg.CachingFiles, RequestedPath)
 		if ThisFile == nil || ThisFile.Completed {
 			if !local.IsFileExcluded(RequestedLocalPath, &cfg) {
 				RemoteRequired = !local.ServeCachedFile(w, r, RequestedLocalPath, &cfg) //if file has been already cached, ...
@@ -39,7 +39,7 @@ func handleReq(w http.ResponseWriter, r *http.Request) {
 
 	if RemoteRequired {
 		_ = local.BuildDirTreeForFile(RequestedLocalPath)
-		remote.ServeFile(w, RequestedPath, &Cfg)
+		remote.ServeFile(w, RequestedPath, &cfg)
 	}
 
 }
