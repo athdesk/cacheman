@@ -3,6 +3,7 @@ package shared
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -60,12 +61,16 @@ func (FileDesc *CachingFile) ServeCachingFile(w http.ResponseWriter, Cfg *Config
 	FileReader := bufio.NewReader(File)
 	DataBuffer := make([]byte, Cfg.ChunkSize)
 
+	NowStr := time.Now().Format(time.Kitchen)
+	fmt.Printf("[SERVER %s] Client attached to ongoing download\n", NowStr)
+
 	w.Header().Add("Content-Length", FileDesc.SizeHeader)
+	w.Header().Add("Server", Cfg.ServerAgent)
 	w.WriteHeader(200)
 
 	for {
-		BytesRead, _ := FileReader.Read(DataBuffer)
-		TotalBytesRead += int64(BytesRead)
+		BytesRead, _ := FileReader.Read(DataBuffer) // This serves the file that's being written, directly from disk
+		TotalBytesRead += int64(BytesRead)          // Is it I/O efficient? No. Is it easy and memory efficient? Yes.
 		if BytesRead == 0 {
 			if FileDesc.Completed {
 				break
