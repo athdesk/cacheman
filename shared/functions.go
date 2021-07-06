@@ -53,7 +53,14 @@ func FindAndDelete(ElementPtr *CachingFile, Slice []*CachingFile) []*CachingFile
 
 func (FileDesc *CachingFile) ServeCachingFile(w http.ResponseWriter, Cfg *Config) {
 	FileDesc.InUse = true
-	File, _ := os.Open(FileDesc.LocalPath)
+	File, Err := os.Open(FileDesc.LocalPath)
+
+	if Err != nil { // could not open the file; drop with status 500
+		w.Header().Add("Server", Cfg.ServerAgent)
+		w.WriteHeader(500)
+		return
+	}
+
 	defer File.Close()
 
 	var TotalBytesRead int64
