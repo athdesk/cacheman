@@ -6,17 +6,25 @@ A tiny pacman centralized caching server, with support for simultaneous download
 
 Installation   
 ------------
-Install from AUR: (not ready yet)
+Use a container
 ```
-$ trizen -S cacheman
-$ sudo systemctl enable cacheman --now 
+$ docker-compose build 
+$ docker-compose up -d
 ```
+You can set a volume or change the port by changing/uncommenting the appropriate lines in docker-compose.yml
+
+
 
 Configuration
 -----
 ```
-# nano /etc/cacheman/cacheman.conf 
+$ nano ./default.conf
+$ docker-compose up --build -d
 ```
+
+MirrorlistPath still doesn't work, 4 mirrors are hardcoded into the program,
+I'll finish it when I feel like doing something useful,
+or when someone starts using this program and opens an issue about it. 
 
 Usage
 -----

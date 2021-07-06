@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  cacheman:
+    build: .
+#    volumes:
+#      - type: bind
+#        source: /tmp/cacheman
+#        target: /cacheman
+    ports:
+      - "8080:8080"
