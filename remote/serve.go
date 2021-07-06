@@ -25,7 +25,6 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *shared.Config) {
 	}
 
 	Halting := false
-	NonExistent := false
 	LocalPath := Cfg.CacheDir + "/" + ReqPath
 
 	CurrentMirrorIndex := 0
@@ -43,16 +42,22 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *shared.Config) {
 		PackageURL.Path = path.Join(PackageURL.Path, ReqPath)
 		GetResp, GetErr := httpClient.Get(PackageURL.String())
 
-		fmt.Printf("[REMOTE %s] Getting file %s from mirror %d\n", NowStr, PackageURL.String(), CurrentMirrorIndex)
+		fmt.Printf("[REMOTE %s] Downloading from mirror %d\n", NowStr, CurrentMirrorIndex)
 
 		//is there a problem with the mirror?
-		if GetErr != nil || GetResp.StatusCode == 404 { //moves to the next mirror, if possible
+		if GetErr != nil || GetResp.StatusCode != 200 { //moves to the next mirror, if possible
 			CurrentMirrorIndex++
 			if CurrentMirrorIndex >= len(Cfg.MirrorList) {
 				CurrentMirrorIndex = 0
-				NonExistent = true
 				Halting = true
-				fmt.Printf("[REMOTE %s] No more mirrors left\n", NowStr)
+				fmt.Printf("[REMOTE %s] No more mirrors left, closing connection\n", NowStr)
+
+				w.Header().Add("Server", Cfg.ServerAgent)
+				StatusCodeErr := 500
+				if GetResp != nil {
+					StatusCodeErr = GetResp.StatusCode
+				}
+				w.WriteHeader(StatusCodeErr)
 				break
 			}
 		} else { //mirror ok, start downloading
@@ -60,7 +65,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *shared.Config) {
 			FileSize := GetResp.Header.Get("Content-Length") //copy size from remote header
 			w.Header().Add("Content-Length", FileSize)       //and send it to our client
 			w.Header().Add("Server", Cfg.ServerAgent)
-			// w.WriteHeader(200)
+			w.WriteHeader(GetResp.StatusCode)
 
 			ThisFile = shared.AddFileToList(ReqPath, LocalPath, FileSize, Cfg)
 			SplitWr := io.MultiWriter(OutFile, w)
@@ -90,9 +95,6 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *shared.Config) {
 
 	if Halting {
 		_ = os.Remove(LocalPath)
-	}
-	if NonExistent {
-		w.WriteHeader(404)
 	}
 
 }
