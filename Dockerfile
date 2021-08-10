@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine as bld
+FROM golang:1.16.7-alpine as bld
 WORKDIR /go/src/cacheman
 COPY . .
 RUN go mod download && go get cacheman/local
