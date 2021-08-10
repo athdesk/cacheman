@@ -8,6 +8,7 @@ FROM alpine
 WORKDIR /root
 COPY --from=bld /go/src/cacheman/cacheman .
 COPY ./default.conf /etc/cacheman/cacheman.conf
+COPY ./mirrorlist /mirrorlist
 EXPOSE 8080
 CMD ["/root/cacheman"]
 
