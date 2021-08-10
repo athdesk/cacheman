@@ -5,17 +5,38 @@ import (
 	"cacheman/remote"
 	"cacheman/shared"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"runtime"
 	"time"
 )
 
 var cfg shared.Config
 
 func main() {
+	go debugHandler()
 	local.PutConfig(&cfg)
 	http.HandleFunc("/", handleReq)
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func debugHandler() {
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run() //	UGLY
+	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()              //	BUT IT
+	defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()         //	WORKS
+
+	for {
+		ReadChar := make([]byte, 1)
+		_, Err := os.Stdin.Read(ReadChar)
+		if Err == io.EOF { // Goroutine info
+			return
+		} else if string(ReadChar[0]) == "g" {
+			fmt.Printf("Current number of Goroutines: %d\r", runtime.NumGoroutine())
+		}
+	}
 }
 
 func handleReq(w http.ResponseWriter, r *http.Request) {
