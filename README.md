@@ -22,10 +22,6 @@ $ nano ./default.conf
 $ docker-compose up --build -d
 ```
 
-MirrorlistPath still doesn't work, 4 mirrors are hardcoded into the program,
-I'll finish it when I feel like doing something useful,
-or when someone starts using this program and opens an issue about it. 
-
 Usage
 -----
 Set cacheman as the primary pacman mirror on every Arch machine in your network

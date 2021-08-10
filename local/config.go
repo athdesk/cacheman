@@ -4,6 +4,7 @@ import (
 	"cacheman/shared"
 	"io/ioutil"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,9 +21,11 @@ type basicCfg struct {
 	ExcludedExts         []string
 }
 
+//const HttpMirrorRegex = "/^Server ?= ?(https?:\\/\\/[A-Za-z0-9.\\$\\/]*)$/gm"
+const HttpMirrorRegex = "^http://[A-Za-z0-9.]*/[A-Za-z0-9./$]*$" // Exclude https to avoid duplicates TODO make it a choice
+
 //PutConfig populates a Cfg struct with settings from the config files
 func PutConfig(Cfg *shared.Config) {
-
 	var Intermediary basicCfg
 
 	ConfigData, Err := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
@@ -43,20 +46,45 @@ func PutConfig(Cfg *shared.Config) {
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
 	Cfg.CachingFiles = make([]*shared.CachingFile, 0)
 	Cfg.ServerAgent = "cacheman"
-	putMirrorList(Cfg)
+	putMirrorList(Cfg, Intermediary.MirrorlistPath)
 }
 
-func putMirrorList(Cfg *shared.Config) {
-	//TODO: get mirrorlist from an actual file
-	Cfg.FullMirrorList = make([]*url.URL, 4)
-	StrMirrorList := make([]string, 4)
-	StrMirrorList[0] = "http://mirror.fra10.de.leaseweb.net/archlinux/$repo/os/$arch"
-	StrMirrorList[1] = "http://mirror.tarellia.net/distr/archlinux/$repo/os/$arch"
-	StrMirrorList[2] = "http://arch.midov.pl/arch/$repo/os/$arch"
-	StrMirrorList[3] = "http://mirror.selfnet.de/archlinux/$repo/os/$arch"
+func putMirrorList(Cfg *shared.Config, MirrorlistPath string) {
+
+	if !FileExists(MirrorlistPath) {
+		panic("Error reading mirrorlist file")
+	}
+	MirrorData, Err := ioutil.ReadFile(MirrorlistPath)
+	if Err != nil {
+		panic(Err)
+	}
+
+	MirrorLines := strings.Split(string(MirrorData), "\n")
+
+	RE := regexp.MustCompile(HttpMirrorRegex)
+	ValidCounter := 0
+	StrMirrorList := make([]string, len(MirrorLines))
+	for Index := 0; Index < len(MirrorLines); Index++ {
+		Replaced := strings.ReplaceAll(MirrorLines[Index], "Server = ", "")
+		if RE.MatchString(Replaced) {
+			StrMirrorList[ValidCounter] = Replaced
+			ValidCounter++
+		}
+	}
+	if ValidCounter > 0 {
+		StrMirrorList = StrMirrorList[0:ValidCounter]
+	} else {
+		panic("Error parsing mirrorlist file")
+	}
+
+	Cfg.FullMirrorList = make([]*url.URL, len(StrMirrorList))
 
 	for Index := 0; Index < len(Cfg.FullMirrorList); Index++ { //strips suffix from mirror urls, parses them
-		Cfg.FullMirrorList[Index], _ = url.Parse(strings.ReplaceAll(StrMirrorList[Index], Cfg.MirrorSuffix, ""))
+		Cfg.FullMirrorList[Index], Err = url.Parse(strings.ReplaceAll(StrMirrorList[Index], Cfg.MirrorSuffix, ""))
+		if Err != nil {
+			panic("Error parsing url " + StrMirrorList[Index])
+		}
 	}
 	go checkMirrorStatus(Cfg)
+
 }
