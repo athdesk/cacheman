@@ -61,6 +61,10 @@ func checkMirrorStatus(Cfg *Config, MaxMirrors int) {
 		for _, Mirror := range Cfg.FullMirrorList {
 			StartedJobs++
 			go checkAndAdd(Mirror, &ValidMirrors, &CompletedJobs, Cfg, MaxMirrors)
+			time.Sleep(10 * time.Millisecond)
+			if len(ValidMirrors) >= MaxMirrors {
+				break
+			}
 		}
 
 		for StartedJobs > CompletedJobs {
@@ -77,15 +81,13 @@ func checkMirrorStatus(Cfg *Config, MaxMirrors int) {
 }
 
 func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *Config, MaxMirrors int) {
-	if len(*ValidMirrors) >= MaxMirrors {
-		return
-	}
-
 	NowStr := time.Now().Format(time.Kitchen)
 	if isAlive(*Mirror) {
-		*ValidMirrors = append(*ValidMirrors, Mirror)
-		fmt.Printf("[MIRROR %s] %s is alive!\n", NowStr, Mirror.Host)
-		Cfg.MirrorList = *ValidMirrors
+		if len(*ValidMirrors) < MaxMirrors {
+			*ValidMirrors = append(*ValidMirrors, Mirror)
+			fmt.Printf("[MIRROR %s] %s is alive!\n", NowStr, Mirror.Host)
+			Cfg.MirrorList = *ValidMirrors
+		}
 	} else {
 		fmt.Printf("[MIRROR %s] %s is dead!\n", NowStr, Mirror.Host)
 	}
