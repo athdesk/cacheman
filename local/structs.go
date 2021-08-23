@@ -18,6 +18,16 @@ type Config struct {
 	ServerAgent          string
 }
 
+type basicCfg struct {
+	CacheDir             string
+	HostAddr             string
+	MirrorlistPath       string
+	ChunkSize            int
+	MirrorSuffix         string
+	MirrorRefreshTimeout int
+	ExcludedExts         []string
+}
+
 type CachingFile struct {
 	ReqPath    string
 	LocalPath  string
