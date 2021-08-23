@@ -31,5 +31,5 @@ func PutConfig(Cfg *Config) {
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
 	Cfg.CachingFiles = make([]*CachingFile, 0)
 	Cfg.ServerAgent = "cacheman"
-	putMirrorList(Cfg, Intermediary.MirrorlistPath)
+	putMirrorList(Cfg, Intermediary.MirrorlistPath, Intermediary.MirrorMaxAmount)
 }

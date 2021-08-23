@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func putMirrorList(Cfg *Config, MirrorlistPath string) {
+func putMirrorList(Cfg *Config, MirrorlistPath string, MaxMirrors int) {
 
 	if !FileExists(MirrorlistPath) {
 		panic("Error reading mirrorlist file")
@@ -46,11 +46,11 @@ func putMirrorList(Cfg *Config, MirrorlistPath string) {
 			panic("Error parsing url " + StrMirrorList[Index])
 		}
 	}
-	go checkMirrorStatus(Cfg)
+	go checkMirrorStatus(Cfg, MaxMirrors)
 
 }
 
-func checkMirrorStatus(Cfg *Config) {
+func checkMirrorStatus(Cfg *Config, MaxMirrors int) {
 	for {
 		NowStr := time.Now().Format(time.Kitchen)
 		fmt.Printf("[MIRROR %s] Refreshing valid mirror list...\n", NowStr)
@@ -60,7 +60,7 @@ func checkMirrorStatus(Cfg *Config) {
 
 		for _, Mirror := range Cfg.FullMirrorList {
 			StartedJobs++
-			go checkAndAdd(Mirror, &ValidMirrors, &CompletedJobs, Cfg)
+			go checkAndAdd(Mirror, &ValidMirrors, &CompletedJobs, Cfg, MaxMirrors)
 		}
 
 		for StartedJobs > CompletedJobs {
@@ -71,12 +71,16 @@ func checkMirrorStatus(Cfg *Config) {
 		if len(ValidMirrors) > 0 {
 			MirTimeout = Cfg.MirrorRefreshTimeout
 		}
-		fmt.Printf("[MIRROR %s] %d out of %d mirrors are valid\n", NowStr, len(ValidMirrors), len(Cfg.FullMirrorList))
+		fmt.Printf("[MIRROR %s] %d active mirrors\n", NowStr, len(ValidMirrors))
 		time.Sleep(MirTimeout)
 	}
 }
 
-func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *Config) {
+func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *Config, MaxMirrors int) {
+	if len(*ValidMirrors) >= MaxMirrors {
+		return
+	}
+
 	NowStr := time.Now().Format(time.Kitchen)
 	if isAlive(*Mirror) {
 		*ValidMirrors = append(*ValidMirrors, Mirror)

@@ -25,6 +25,7 @@ type basicCfg struct {
 	ChunkSize            int
 	MirrorSuffix         string
 	MirrorRefreshTimeout int
+	MirrorMaxAmount      int
 	ExcludedExts         []string
 }
 
