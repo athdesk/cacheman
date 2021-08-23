@@ -1,7 +1,6 @@
 package local
 
 import (
-	"cacheman/shared"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +43,7 @@ func BuildDirTreeForFile(fpath string) error {
 }
 
 //IsFileExcluded checks if a file has a blacklisted extension
-func IsFileExcluded(path string, Cfg *shared.Config) bool {
+func IsFileExcluded(path string, Cfg *Config) bool {
 	SplitPath := strings.Split(path, ".")
 	for _, Excl := range Cfg.ExcludedExts {
 		if SplitPath[len(SplitPath)-1] == Excl {

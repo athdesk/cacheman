@@ -2,7 +2,6 @@ package local
 
 import (
 	"cacheman/remote"
-	"cacheman/shared"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,7 +9,7 @@ import (
 )
 
 //ServeCachedFile Takes a requests and fulfills it with a cached file
-func ServeCachedFile(w http.ResponseWriter, r *http.Request, path string, Cfg *shared.Config) bool {
+func ServeCachedFile(w http.ResponseWriter, r *http.Request, path string, Cfg *Config) bool {
 	AbsPath := strings.ReplaceAll(path, Cfg.CacheDir, "")
 
 	ExpectedSize := remote.GetCorrectSize(AbsPath, Cfg)

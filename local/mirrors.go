@@ -1,14 +1,13 @@
 package local
 
 import (
-	"cacheman/shared"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 )
 
-func checkMirrorStatus(Cfg *shared.Config) {
+func checkMirrorStatus(Cfg *Config) {
 	for {
 		NowStr := time.Now().Format(time.Kitchen)
 		fmt.Printf("[MIRROR %s] Refreshing valid mirror list...\n", NowStr)
@@ -34,7 +33,7 @@ func checkMirrorStatus(Cfg *shared.Config) {
 	}
 }
 
-func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *shared.Config) {
+func checkAndAdd(Mirror *url.URL, ValidMirrors *[]*url.URL, Counter *int, Cfg *Config) {
 	NowStr := time.Now().Format(time.Kitchen)
 	if isAlive(*Mirror) {
 		*ValidMirrors = append(*ValidMirrors, Mirror)

@@ -1,7 +1,6 @@
 package local
 
 import (
-	"cacheman/shared"
 	"io/ioutil"
 	"net/url"
 	"regexp"
@@ -24,7 +23,7 @@ type basicCfg struct {
 const HttpMirrorRegex = "^http://[A-Za-z0-9.]*/[A-Za-z0-9./$]*$" // Exclude https to avoid duplicates TODO make it a choice
 
 //PutConfig populates a Cfg struct with settings from the config files
-func PutConfig(Cfg *shared.Config) {
+func PutConfig(Cfg *Config) {
 	var Intermediary basicCfg
 
 	ConfigData, Err := ioutil.ReadFile("/etc/cacheman/cacheman.conf")
@@ -43,12 +42,12 @@ func PutConfig(Cfg *shared.Config) {
 	Cfg.MirrorSuffix = Intermediary.MirrorSuffix
 	Cfg.MirrorRefreshTimeout = time.Duration(Intermediary.MirrorRefreshTimeout) * time.Second
 	Cfg.ExcludedExts = Intermediary.ExcludedExts
-	Cfg.CachingFiles = make([]*shared.CachingFile, 0)
+	Cfg.CachingFiles = make([]*CachingFile, 0)
 	Cfg.ServerAgent = "cacheman"
 	putMirrorList(Cfg, Intermediary.MirrorlistPath)
 }
 
-func putMirrorList(Cfg *shared.Config, MirrorlistPath string) {
+func putMirrorList(Cfg *Config, MirrorlistPath string) {
 
 	if !FileExists(MirrorlistPath) {
 		panic("Error reading mirrorlist file")

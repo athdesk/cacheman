@@ -1,4 +1,4 @@
-package shared
+package local
 
 import (
 	"net/url"

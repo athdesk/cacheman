@@ -1,7 +1,7 @@
 package remote
 
 import (
-	"cacheman/shared"
+	"cacheman/local"
 	"io"
 	"net/http"
 	"net/url"
@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *shared.CachingFile, Cfg *shared.Config) error {
+func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *local.CachingFile, Cfg *local.Config) error {
 	for { //cycle reads Get-Body, ChunkSize bytes at a time
 		BytesRead, CopyErr := io.CopyN(SplitWriter, GetReader, int64(Cfg.ChunkSize)) //read body
 		FileDesc.BytesRead += BytesRead
@@ -25,7 +25,7 @@ func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *shared.Cac
 	}
 }
 
-func streamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *shared.CachingFile, Cfg *shared.Config) {
+func streamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *local.CachingFile, Cfg *local.Config) {
 	for { //cycle reads Get-Body, ChunkSize bytes at a time
 		BytesRead, CopyErr := io.CopyN(FileWriter, GetReader, int64(Cfg.ChunkSize)) //read body
 		FileDesc.BytesRead += BytesRead
@@ -36,7 +36,7 @@ func streamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *shared.Ca
 }
 
 //GetCorrectSize returns the Content-Length of a file, returns -1 if can't get to package
-func GetCorrectSize(ReqPath string, Cfg *shared.Config) int64 {
+func GetCorrectSize(ReqPath string, Cfg *local.Config) int64 {
 	CurrentMirrorIndex := 0
 	var httpClient = new(http.Client)
 	var CurrentMirror url.URL

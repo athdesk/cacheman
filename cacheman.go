@@ -3,7 +3,6 @@ package main
 import (
 	"cacheman/local"
 	"cacheman/remote"
-	"cacheman/shared"
 	"fmt"
 	"io"
 	"log"
@@ -14,7 +13,7 @@ import (
 	"time"
 )
 
-var cfg shared.Config
+var cfg local.Config
 
 func main() {
 	go debugHandler()
@@ -48,7 +47,7 @@ func handleReq(w http.ResponseWriter, r *http.Request) {
 	RemoteRequired := true
 
 	if local.FileExists(RequestedLocalPath) { //is file cached?
-		ThisFile := shared.FindFile(cfg.CachingFiles, RequestedPath)
+		ThisFile := local.FindFile(cfg.CachingFiles, RequestedPath)
 		if ThisFile == nil || ThisFile.Completed {
 			if !local.IsFileExcluded(RequestedLocalPath, &cfg) {
 				RemoteRequired = !local.ServeCachedFile(w, r, RequestedLocalPath, &cfg) //if file has been already cached, ...
