@@ -1,15 +1,16 @@
 package remote
 
 import (
-	"cacheman/shared"
+	"cacheman/local"
 	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
+	"time"
 )
 
-func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *shared.CachingFile, Cfg *shared.Config) error {
+func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *local.CachingFile, Cfg *local.Config) error {
 	for { //cycle reads Get-Body, ChunkSize bytes at a time
 		BytesRead, CopyErr := io.CopyN(SplitWriter, GetReader, int64(Cfg.ChunkSize)) //read body
 		FileDesc.BytesRead += BytesRead
@@ -25,7 +26,7 @@ func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *shared.Cac
 	}
 }
 
-func streamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *shared.CachingFile, Cfg *shared.Config) {
+func streamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *local.CachingFile, Cfg *local.Config) {
 	for { //cycle reads Get-Body, ChunkSize bytes at a time
 		BytesRead, CopyErr := io.CopyN(FileWriter, GetReader, int64(Cfg.ChunkSize)) //read body
 		FileDesc.BytesRead += BytesRead
@@ -36,11 +37,14 @@ func streamToFile(FileWriter io.Writer, GetReader io.Reader, FileDesc *shared.Ca
 }
 
 //GetCorrectSize returns the Content-Length of a file, returns -1 if can't get to package
-func GetCorrectSize(ReqPath string, Cfg *shared.Config) int64 {
+func GetCorrectSize(ReqPath string, Cfg *local.Config) int64 {
 	CurrentMirrorIndex := 0
 	var httpClient = new(http.Client)
 	var CurrentMirror url.URL
 	var PackageURL url.URL
+
+	ServeStartTime := time.Now().Unix()
+	TimeElapsed := func() int64 { return int64(time.Now().Unix() - ServeStartTime) }
 
 	for { //execute cycle for each mirror, will break if download is successful
 		CurrentMirror = *Cfg.MirrorList[CurrentMirrorIndex]
@@ -55,9 +59,9 @@ func GetCorrectSize(ReqPath string, Cfg *shared.Config) int64 {
 
 		if MirrorBad { //moves to the next mirror, if possible
 			CurrentMirrorIndex++
-			if CurrentMirrorIndex >= len(Cfg.MirrorList) {
+			if CurrentMirrorIndex >= len(Cfg.MirrorList) || TimeElapsed() > 3 {
 				CurrentMirrorIndex = 0
-				return -1 //
+				return -1
 			}
 		} else { //if mirror replied, get size header
 			FileSize, _ := strconv.ParseInt(GetResp.Header.Get("Content-Length"), 10, 64)

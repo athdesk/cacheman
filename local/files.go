@@ -1,7 +1,6 @@
 package local
 
 import (
-	"cacheman/shared"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,8 +34,8 @@ func FileSize(filename string) int64 {
 }
 
 //BuildDirTreeForFile makes sure that the proper directory structure for a chosen filepath exists
-func BuildDirTreeForFile(fpath string) error {
-	realPath := filepath.Dir(fpath)
+func BuildDirTreeForFile(path string) error {
+	realPath := filepath.Dir(path)
 	if !DirExists(realPath) {
 		return os.MkdirAll(realPath, 0755)
 	}
@@ -44,7 +43,7 @@ func BuildDirTreeForFile(fpath string) error {
 }
 
 //IsFileExcluded checks if a file has a blacklisted extension
-func IsFileExcluded(path string, Cfg *shared.Config) bool {
+func IsFileExcluded(path string, Cfg *Config) bool {
 	SplitPath := strings.Split(path, ".")
 	for _, Excl := range Cfg.ExcludedExts {
 		if SplitPath[len(SplitPath)-1] == Excl {

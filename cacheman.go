@@ -3,19 +3,39 @@ package main
 import (
 	"cacheman/local"
 	"cacheman/remote"
-	"cacheman/shared"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"runtime"
 	"time"
 )
 
-var cfg shared.Config
+var cfg local.Config
 
 func main() {
+	go debugHandler()
 	local.PutConfig(&cfg)
 	http.HandleFunc("/", handleReq)
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func debugHandler() {
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run() //	UGLY
+	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()              //	BUT IT
+	defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()         //	WORKS
+
+	for {
+		ReadChar := make([]byte, 1)
+		_, Err := os.Stdin.Read(ReadChar)
+		if Err == io.EOF { // Goroutine info
+			return
+		} else if string(ReadChar[0]) == "g" {
+			fmt.Printf("Current number of Goroutines: %d\r", runtime.NumGoroutine())
+		}
+	}
 }
 
 func handleReq(w http.ResponseWriter, r *http.Request) {
@@ -27,10 +47,10 @@ func handleReq(w http.ResponseWriter, r *http.Request) {
 	RemoteRequired := true
 
 	if local.FileExists(RequestedLocalPath) { //is file cached?
-		ThisFile := shared.FindFile(cfg.CachingFiles, RequestedPath)
+		ThisFile := local.FindFile(cfg.CachingFiles, RequestedPath)
 		if ThisFile == nil || ThisFile.Completed {
 			if !local.IsFileExcluded(RequestedLocalPath, &cfg) {
-				RemoteRequired = !local.ServeCachedFile(w, r, RequestedLocalPath, &cfg) //if file has been already cached, ...
+				RemoteRequired = !remote.ServeCachedFile(w, r, RequestedLocalPath, &cfg) //if file has been already cached, ...
 			}
 		} else { //if file is BEING cached right now, ...
 			ThisFile.ServeCachingFile(w, &cfg)
