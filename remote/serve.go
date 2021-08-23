@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-//ServeFile serves the requested file to an http.ResponseWriter
+//ServeFile serves the requested file to a http.ResponseWriter
 func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
 
 	//if there's no valid mirrors, wait till we have

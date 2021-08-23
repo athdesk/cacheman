@@ -34,8 +34,8 @@ func FileSize(filename string) int64 {
 }
 
 //BuildDirTreeForFile makes sure that the proper directory structure for a chosen filepath exists
-func BuildDirTreeForFile(fpath string) error {
-	realPath := filepath.Dir(fpath)
+func BuildDirTreeForFile(path string) error {
+	realPath := filepath.Dir(path)
 	if !DirExists(realPath) {
 		return os.MkdirAll(realPath, 0755)
 	}
