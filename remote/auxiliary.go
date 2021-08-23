@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"time"
 )
 
 func copyStream(SplitWriter io.Writer, GetReader io.Reader, FileDesc *local.CachingFile, Cfg *local.Config) error {
@@ -42,6 +43,9 @@ func GetCorrectSize(ReqPath string, Cfg *local.Config) int64 {
 	var CurrentMirror url.URL
 	var PackageURL url.URL
 
+	ServeStartTime := time.Now().Unix()
+	TimeElapsed := func() int64 { return int64(time.Now().Unix() - ServeStartTime) }
+
 	for { //execute cycle for each mirror, will break if download is successful
 		CurrentMirror = *Cfg.MirrorList[CurrentMirrorIndex]
 		PackageURL = CurrentMirror
@@ -55,9 +59,9 @@ func GetCorrectSize(ReqPath string, Cfg *local.Config) int64 {
 
 		if MirrorBad { //moves to the next mirror, if possible
 			CurrentMirrorIndex++
-			if CurrentMirrorIndex >= len(Cfg.MirrorList) {
+			if CurrentMirrorIndex >= len(Cfg.MirrorList) || TimeElapsed() > 3 {
 				CurrentMirrorIndex = 0
-				return -1 //
+				return -1
 			}
 		} else { //if mirror replied, get size header
 			FileSize, _ := strconv.ParseInt(GetResp.Header.Get("Content-Length"), 10, 64)
