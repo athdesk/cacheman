@@ -21,7 +21,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *shared.Config) {
 	//if it's because of network issues, pacman will timeout us
 	//once timeouted, we download the file anyway to keep it cached
 	for len(Cfg.MirrorList) < 1 {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	Halting := false
