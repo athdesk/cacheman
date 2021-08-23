@@ -46,7 +46,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
 		PackageURL.Path = path.Join(PackageURL.Path, ReqPath)
 		GetResp, GetErr := httpClient.Get(PackageURL.String())
 
-		fmt.Printf("[REMOTE %s] Downloading from mirror %d\n", NowStr, CurrentMirrorIndex)
+		//fmt.Printf("[REMOTE %s] Downloading from mirror %d\n", NowStr, CurrentMirrorIndex)
 
 		//is there a problem with the mirror?
 		if GetErr != nil || GetResp.StatusCode != 200 { // moves to the next mirror, if possible
@@ -54,7 +54,7 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
 			if CurrentMirrorIndex >= len(Cfg.MirrorList) || TimeElapsed() > 3 { // Last mirror checked, or request taking too long TODO make timeout time an user choice
 				CurrentMirrorIndex = 0
 				Halting = true
-				fmt.Printf("[REMOTE %s] File unavailable, closing connection\n", NowStr)
+				fmt.Printf("[REMOTE %s] File unavailable, closing connection for %s\n", NowStr, ReqPath)
 
 				w.Header().Add("Server", Cfg.ServerAgent)
 				StatusCodeErr := 500
