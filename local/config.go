@@ -21,7 +21,6 @@ type basicCfg struct {
 	ExcludedExts         []string
 }
 
-//const HttpMirrorRegex = "/^Server ?= ?(https?:\\/\\/[A-Za-z0-9.\\$\\/]*)$/gm"
 const HttpMirrorRegex = "^http://[A-Za-z0-9.]*/[A-Za-z0-9./$]*$" // Exclude https to avoid duplicates TODO make it a choice
 
 //PutConfig populates a Cfg struct with settings from the config files
