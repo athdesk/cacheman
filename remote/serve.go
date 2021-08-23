@@ -25,6 +25,9 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
+	ServeStartTime := time.Now().Unix()
+	TimeElapsed := func() int64 { return int64(time.Now().Unix() - ServeStartTime) }
+
 	Halting := false
 	LocalPath := Cfg.CacheDir + "/" + ReqPath
 
@@ -46,12 +49,12 @@ func ServeFile(w http.ResponseWriter, ReqPath string, Cfg *local.Config) {
 		fmt.Printf("[REMOTE %s] Downloading from mirror %d\n", NowStr, CurrentMirrorIndex)
 
 		//is there a problem with the mirror?
-		if GetErr != nil || GetResp.StatusCode != 200 { //moves to the next mirror, if possible
+		if GetErr != nil || GetResp.StatusCode != 200 { // moves to the next mirror, if possible
 			CurrentMirrorIndex++
-			if CurrentMirrorIndex >= len(Cfg.MirrorList) {
+			if CurrentMirrorIndex >= len(Cfg.MirrorList) || TimeElapsed() > 3 { // Last mirror checked, or request taking too long TODO make timeout time an user choice
 				CurrentMirrorIndex = 0
 				Halting = true
-				fmt.Printf("[REMOTE %s] No more mirrors left, closing connection\n", NowStr)
+				fmt.Printf("[REMOTE %s] File unavailable, closing connection\n", NowStr)
 
 				w.Header().Add("Server", Cfg.ServerAgent)
 				StatusCodeErr := 500
